@@ -74,7 +74,7 @@ const T6 = 'scrollPanelDelayTimeout';
 const T7 = 'waitPanelBoxAllocation';
 
 var dtpPanel = Utils.defineClass({
-    Name: 'DashToPanel-Panel',
+    Name: 'DashToPanel-Panel2',
     Extends: St.Widget,
 
     _init: function(panelManager, monitor, panelBox, isStandalone) {
@@ -1193,12 +1193,22 @@ var dtpPanel = Utils.defineClass({
             let datetimeParts = datetime.split(' ');
             let time = datetimeParts[1];
             let clockText = this.statusArea.dateMenu._clockDisplay.clutter_text;
+            let zeroPad = num => {
+                if (num <= 9)
+                    return '0' + num;
+                return '' + num;
+            };
             let setClockText = text => {
                 let stacks = text instanceof Array;
-                let separator = '\n<span size="xx-small">‧‧</span>\n';
+                let separator = '\n';
+                let now = new Date();
+                let ctext = '<span font_size="x-large" weight="bold">' +
+                    now.getDate() + '\n\n' +
+                    zeroPad(now.getHours()) + '\n' + 
+                    zeroPad(now.getMinutes()) + '</span>';
         
-                clockText.set_text((stacks ? text.join(separator) : text).trim());
-                clockText.set_use_markup(stacks);
+                clockText.set_text(ctext);
+                clockText.set_use_markup(true);
                 clockText.get_allocation_box();
         
                 return !clockText.get_layout().is_ellipsized();
