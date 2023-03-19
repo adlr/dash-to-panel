@@ -1042,7 +1042,6 @@ var Panel = GObject.registerClass({
                 clockText.set_use_markup(stacks);
                 if (dateNumber) {
                     const use_clocktext = `<u>${dateNumber}</u>\n${text.join('\n')}`;
-                    log(`use_clocktext: ${use_clocktext}`);
                     clockText.set_text(use_clocktext);
                     clockText.set_use_markup(true);
                 }
