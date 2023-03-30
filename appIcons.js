@@ -372,6 +372,9 @@ var TaskbarAppIcon = GObject.registerClass({
     onWindowsChanged() {
         this._updateWindows();
         this.updateIcon();
+
+        if (this._isGroupApps)
+            this._setIconStyle();
     }
 
     onWindowEnteredOrLeft(display, number, metaWindow) {
@@ -1806,7 +1809,7 @@ var MyShowAppsIconMenu = class extends PopupMenu.PopupMenu {
 
         this._appendItem({
             title: _('Settings'),
-            cmd: ['gnome-control-center', 'wifi']
+            cmd: ['gnome-control-center']
         });
 
         this._appendList(
