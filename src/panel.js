@@ -1328,12 +1328,17 @@ export const Panel = GObject.registerClass(
         let datetimeParts = datetime.split(' ')
         let time = datetimeParts[1]
         let clockText = this.statusArea.dateMenu._clockDisplay.clutter_text
-        let setClockText = (text, useTimeSeparator) => {
+        let setClockText = (text, useTimeSeparator, dateNumber) => {
           let stacks = text instanceof Array
           let separator = `\n<span size="8192"> ${useTimeSeparator ? '‧‧' : '—'} </span>\n`
 
           clockText.set_text((stacks ? text.join(separator) : text).trim())
           clockText.set_use_markup(stacks)
+          if (dateNumber) {
+            const use_clocktext = `<u>${dateNumber}</u>\n<span size="4pt">\n</span>${text.join('\n')}`;
+            clockText.set_text(use_clocktext);
+            clockText.set_use_markup(true);
+          }
           clockText.get_allocation_box()
 
           return !clockText.get_layout().is_ellipsized()
@@ -1369,7 +1374,7 @@ export const Panel = GObject.registerClass(
             timeParts.push.apply(timeParts, timeParts.pop().split(' '))
           }
 
-          setClockText(timeParts, true)
+          setClockText(timeParts, true, datetimeParts[0].split(' ')[1])
         }
       }
     }
