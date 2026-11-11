@@ -1,0 +1,62 @@
+name: Rebase Patch on Latest Upstream Tag
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # Runs daily at 06:00 UTC
+  workflow_dispatch:     # Allows manual triggering from the Actions tab
+
+permissions:
+  contents: write        # Required to push the rebased branch
+
+jobs:
+  rebase-patch:
+    runs-on: ubuntu-latest
+    env:
+      UPSTREAM_REPO: https://github.com/home-sweet-gnome/dash-to-panel
+      PATCH_BRANCH: adlr2
+      PATCH_COMMIT_COUNT: 1 # Number of custom commits at the tip of your branch
+
+    steps:
+      - name: Checkout Fork
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Fetch full history and tags
+          ref: ${{ env.PATCH_BRANCH }}
+
+      - name: Configure Git Identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch Upstream Tags and Rebase
+        run: |
+          git remote add upstream "$UPSTREAM_REPO"
+          git fetch upstream --tags
+
+          # Find the highest tag matching strictly "v<number>" (e.g., v1, v2, v10)
+          LATEST_TAG=$(git tag -l "v*" | grep -E '^v[0-9]+$' | sort -V | tail -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No matching v# tags found."
+            exit 1
+          fi
+
+          echo "Latest upstream tag is: $LATEST_TAG"
+
+          # Check if the latest tag is already an ancestor of our patch branch
+          if git merge-base --is-ancestor "$LATEST_TAG" HEAD; then
+            echo "$PATCH_BRANCH is already based on $LATEST_TAG. Nothing to do."
+            exit 0
+          fi
+
+          echo "Rebasing top $PATCH_COMMIT_COUNT commit(s) onto $LATEST_TAG..."
+
+          # Rebase only the patch commits onto the new tag
+          if ! git rebase --onto "$LATEST_TAG" "HEAD~${PATCH_COMMIT_COUNT}" "$PATCH_BRANCH"; then
+            git rebase --abort
+            echo "::error::Rebase onto $LATEST_TAG failed due to merge conflicts. Manual intervention required."
+            exit 1
+          fi
+
+          # Force-with-lease safely updates the branch in your fork
+          git push origin "$PATCH_BRANCH" --force-with-lease
